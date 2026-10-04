@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RE9 Save Converter (PS5 / PC)
+Comment=Convert Resident Evil Requiem saves between PC and PS5
+Exec=/home/axotn1k1/vscode/re9-save-gui/launch.sh
+Icon=applications-games
+Terminal=false
+Categories=Game;Utility;
