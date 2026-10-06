@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RE Requiem Save Converter (PS5 & PC)</title>
+  <title>Game Save Converter (RE Engine & Unreal Engine | PS5 & PC)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,10 +14,10 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-branding">
-        <div class="logo-badge">RE</div>
+        <div class="logo-badge" id="appLogoBadge">🎮</div>
         <div>
-          <h1>RE Requiem <span class="accent-text">Save Converter</span></h1>
-          <p class="subtitle">Перенос и перекодирование сохранений между ПК (Steam / GSE) и PS5 (Garlic SaveMgr)</p>
+          <h1>Game Save <span class="accent-text">Converter</span></h1>
+          <p class="subtitle">Универсальный перенос сохранений между ПК и PS5 • RE Engine & Unreal Engine</p>
         </div>
       </div>
       <div class="header-status">
@@ -27,6 +27,21 @@
         </div>
       </div>
     </header>
+
+    <!-- Engine Selector Bar -->
+    <div class="engine-bar card">
+      <div class="engine-bar-inner">
+        <div class="engine-detected-badge" id="engineDetectedBadge">
+          <span class="engine-icon" id="engineIcon">⚡</span>
+          <span class="engine-text">Определен движок: <strong id="engineDetectedText">Автоопределение...</strong></span>
+        </div>
+        <div class="engine-toggle-group">
+          <button class="engine-pill active" data-engine="auto" id="pillEngineAuto">🤖 Авто-движок</button>
+          <button class="engine-pill" data-engine="re_engine" id="pillEngineRE">🧬 RE Engine</button>
+          <button class="engine-pill" data-engine="unreal_engine" id="pillEngineUE">⚡ Unreal Engine</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Main Grid -->
     <main class="main-content">
@@ -38,10 +53,13 @@
             <h2>Исходные сохранения</h2>
           </div>
           <div class="header-actions">
-            <button class="btn btn-secondary btn-sm" id="btnDefaultPcDir" title="Вернуться к автопоиску сейвов на ПК">
-              🖥️ Сейвы ПК
+            <button class="btn btn-secondary btn-sm" id="btnDefaultReDir" title="Сохранения Resident Evil Requiem на ПК">
+              🧟 RE Requiem
             </button>
-            <button class="btn btn-secondary btn-sm" id="btnUploadFile" title="Загрузить файл .bin или архив .zip/.rar/.7z">
+            <button class="btn btn-secondary btn-sm" id="btnDefaultSfDir" title="Сохранения Split Fiction на ПК">
+              ⚡ Split Fiction
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btnUploadFile" title="Загрузить файл (.bin, .Split, .sav, архив .zip/.rar/.7z)">
               📥 Файл / Архив
             </button>
             <button class="btn btn-secondary btn-sm" id="btnUploadFolder" title="Загрузить целую папку">
@@ -51,7 +69,7 @@
         </div>
 
         <!-- Hidden upload inputs -->
-        <input type="file" id="fileInput" accept=".bin,.zip,.rar,.7z,.tar,.gz,.bz2,.xz" style="display: none;">
+        <input type="file" id="fileInput" accept=".bin,.split,.sav,.json,.zip,.rar,.7z,.tar,.gz,.bz2,.xz" style="display: none;">
         <input type="file" id="folderInput" webkitdirectory directory style="display: none;">
 
         <div class="folder-path-bar">
@@ -65,7 +83,7 @@
         </div>
 
         <div class="drop-hint">
-          💡 Совет: Вы можете перетащить сюда файл сохранения (<code>.bin</code>), архив (<code>.zip</code>, <code>.rar</code>, <code>.7z</code>) или папку прямо из файлового менеджера!
+          💡 Совет: Вы можете перетащить сюда файл сохранения (<code>.bin</code>, <code>SaveData.Split</code>, <code>.sav</code>), архив (<code>.zip</code>, <code>.rar</code>, <code>.7z</code>) или папку прямо из проводника!
         </div>
       </section>
 
@@ -89,7 +107,7 @@
             <button class="direction-tab" data-direction="pc2pc">
               <span class="tab-icon">💻</span>
               <span class="tab-title">ПК → ПК</span>
-              <span class="tab-sub">Смена SteamID</span>
+              <span class="tab-sub">Смена ID / UID</span>
             </button>
             <button class="direction-tab" data-direction="ps52pc">
               <span class="tab-icon">🕹️</span>
@@ -99,12 +117,12 @@
           </div>
         </div>
 
-        <!-- Target Mode Card (for PS5) -->
+        <!-- RE Engine Specific Target Mode Card -->
         <div class="card" id="ps5TargetOptionsCard">
           <div class="card-header">
             <div class="card-title">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <h2>Формат записи на PS5</h2>
+              <h2>Формат записи на PS5 (RE Engine)</h2>
             </div>
           </div>
 
@@ -132,12 +150,36 @@
           </div>
         </div>
 
+        <!-- Unreal Engine Specific Info Card -->
+        <div class="card" id="ueInfoCard" style="display: none;">
+          <div class="card-header">
+            <div class="card-title">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <h2>Профиль Unreal Engine (Split Fiction)</h2>
+            </div>
+          </div>
+          <div class="ue-meta-grid" id="ueMetaGrid">
+            <div class="ue-meta-item">
+              <span class="ue-meta-label">Целевой файл PS5:</span>
+              <span class="ue-meta-value code-font">ue4savegame.dpx.sav</span>
+            </div>
+            <div class="ue-meta-item">
+              <span class="ue-meta-label">Слот GarlicMgr:</span>
+              <span class="ue-meta-value code-font">sdimg_ProfileData</span>
+            </div>
+            <div class="ue-meta-item full-span" id="ueMetaChapter">
+              <span class="ue-meta-label">Глава / Прогресс:</span>
+              <span class="ue-meta-value highlight" id="ueChapterVal">-</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Configuration Parameters -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-              <h2>Параметры и ID</h2>
+              <h2>Параметры и идентификаторы</h2>
             </div>
           </div>
 
@@ -148,7 +190,7 @@
             </div>
 
             <div class="form-group" id="groupTargetId">
-              <label for="inputTargetId" id="lblTargetId">Целевой ID (PS5 / Steam):</label>
+              <label for="inputTargetId" id="lblTargetId">Целевой ID (PS5):</label>
               <input type="text" id="inputTargetId" class="input-text" value="394424879635983">
             </div>
 
@@ -168,11 +210,11 @@
         </div>
 
         <!-- Advanced Region & Title ID Settings (Collapsible) -->
-        <div class="card advanced-card">
+        <div class="card advanced-card" id="cardAdvanced">
           <div class="card-header advanced-toggle" id="btnToggleAdvanced" style="cursor: pointer; user-select: none;">
             <div class="card-title">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              <h2>Тонкие настройки (Регион, Title ID, Версия)</h2>
+              <h2>Тонкие настройки (Title ID, Регион)</h2>
             </div>
             <span class="accordion-arrow" id="advancedArrow">▼</span>
           </div>
@@ -180,14 +222,14 @@
           <div class="advanced-body" id="advancedBody" style="display: none;">
             <div class="form-grid">
               <div class="form-group">
-                <label for="inputGameId">Title ID игры (Код диска):</label>
+                <label for="inputGameId">Title ID игры (PS5):</label>
                 <input type="text" id="inputGameId" class="input-text" value="PPSA30803">
                 <label class="checkbox-label">
                   <input type="checkbox" id="chkUseGameFolder"> Вложить в папку TitleID при экспорте
                 </label>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" id="groupRegionPreset">
                 <label for="selectRegionPreset">Пресет региона:</label>
                 <select id="selectRegionPreset" class="input-text">
                   <option value="ps5_eu_us" selected>PS5 Европа / США (3208943443)</option>
@@ -197,7 +239,7 @@
                 <input type="text" id="inputRegionHash" class="input-text" value="3208943443" style="margin-top: 6px;">
               </div>
 
-              <div class="form-group full-width">
+              <div class="form-group full-width" id="groupVersionPreset">
                 <label for="selectVersionPreset">Пресет версии билда:</label>
                 <select id="selectVersionPreset" class="input-text">
                   <option value="ps5_102" selected>v1.0.2.0 (16785408) — Текущая PS5</option>
@@ -220,6 +262,10 @@
           <button class="btn btn-secondary" id="btnConvertBatch">
             Конвертировать ВСЕ сейвы из папки
           </button>
+
+          <button class="btn btn-success btn-large" id="btnDirectUploadPs5" style="display: none;">
+            📡 Загрузить напрямую на PS5 (Garlic SaveMgr)
+          </button>
         </div>
       </section>
     </main>
@@ -233,7 +279,7 @@
         </div>
         <button class="btn btn-ghost btn-sm" id="btnClearLog">Очистить лог</button>
       </div>
-      <div class="console-output" id="consoleOutput">Готов к работе. Выберите сохранение или перетащите файл/архив.</div>
+      <div class="console-output" id="consoleOutput">Готов к работе. Выберите сохранение или перетащите файл/папку.</div>
     </section>
   </div>
 
